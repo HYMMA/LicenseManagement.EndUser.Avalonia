@@ -32,4 +32,5 @@ jobs:
       run: dotnet pack --configuration Release --no-build "-p:Version=${{ steps.version.outputs.VERSION }}" -o ./nupkg
 
     - name: Push to NuGet
+      shell: bash
       run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
