@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:LicenseManagement.EndUser.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="280"
+        x:Class="LicenseManagement.EndUser.Avalonia.Views.RegisterLicenseView"
+        x:DataType="vm:RegisterLicenseViewModel"
+        Title="Register License"
+        Width="500"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        x:Name="ThisWindow">
+
+  <Window.Styles>
+    <StyleInclude Source="avares://LicenseManagement.EndUser.Avalonia/Themes/LicenseTheme.axaml" />
+  </Window.Styles>
+
+  <Border Classes="card" Margin="0" CornerRadius="0" BorderThickness="0">
+    <StackPanel Spacing="20">
+      <!-- Header -->
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Border Background="#F0F9FF" CornerRadius="8" Padding="10">
+          <TextBlock Text="🔑" FontSize="20" />
+        </Border>
+        <StackPanel>
+          <TextBlock Text="Register Your License" Classes="heading" />
+          <TextBlock Text="Enter your product key to activate"
+                     Classes="muted"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Input Section -->
+      <StackPanel Spacing="8">
+        <TextBlock Text="Product Key" Classes="label" />
+        <TextBox x:Name="ReceiptCodeTextBox"
+                 Classes="modern"
+                 Text="{Binding ReceiptCode}"
+                 Watermark="XXXX-XXXX-XXXX-XXXX"
+                 FontSize="16"
+                 FontFamily="Consolas, monospace" />
+      </StackPanel>
+
+      <!-- Error Message -->
+      <Border Background="#FEF2F2"
+              CornerRadius="8"
+              Padding="12"
+              IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding ErrorMessage}"
+                   Foreground="#DC2626"
+                   TextWrapping="Wrap"
+                   FontSize="13" />
+      </Border>
+
+      <!-- Loading Indicator -->
+      <StackPanel Orientation="Horizontal"
+                  Spacing="12"
+                  HorizontalAlignment="Center"
+                  IsVisible="{Binding IsProcessing}">
+        <Border Width="20" Height="20" CornerRadius="10" BorderBrush="#3B82F6" BorderThickness="2">
+          <Border.RenderTransform>
+            <RotateTransform />
+          </Border.RenderTransform>
+        </Border>
+        <TextBlock Text="Registering..." Classes="muted" VerticalAlignment="Center" />
+      </StackPanel>
+
+      <!-- Buttons -->
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <Button Grid.Column="1"
+                Content="Cancel"
+                Classes="secondary"
+                Command="{Binding CancelCommand}"
+                CommandParameter="{Binding #ThisWindow}"
+                Margin="0,0,12,0"
+                IsEnabled="{Binding !IsProcessing}" />
+        <Button Grid.Column="2"
+                Content="Register"
+                Classes="primary"
+                Command="{Binding RegisterCommand}"
+                CommandParameter="{Binding #ThisWindow}"
+                IsEnabled="{Binding !IsProcessing}" />
+      </Grid>
+    </StackPanel>
+  </Border>
+</Window>

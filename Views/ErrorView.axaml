@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:LicenseManagement.EndUser.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+        x:Class="LicenseManagement.EndUser.Avalonia.Views.ErrorView"
+        x:DataType="vm:ErrorViewModel"
+        Title="Error"
+        Width="500"
+        MinHeight="200"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+  <Window.Styles>
+    <StyleInclude Source="avares://LicenseManagement.EndUser.Avalonia/Themes/LicenseTheme.axaml" />
+  </Window.Styles>
+
+  <Border Classes="card" Margin="0" CornerRadius="0" BorderThickness="0">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <!-- Header -->
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+        <Border Background="#FEF2F2" CornerRadius="8" Padding="10">
+          <TextBlock Text="!" FontSize="24" FontWeight="Bold" Foreground="#DC2626" />
+        </Border>
+        <TextBlock Text="An Error Occurred" Classes="heading" VerticalAlignment="Center" />
+      </StackPanel>
+
+      <!-- Error Messages -->
+      <ScrollViewer Grid.Row="1" MaxHeight="200" Margin="0,0,0,20">
+        <StackPanel Spacing="8">
+          <TextBlock Text="{Binding Message}"
+                     TextWrapping="Wrap"
+                     Foreground="#DC2626"
+                     FontSize="14" />
+
+          <TextBlock Text="{Binding InnerMessage}"
+                     TextWrapping="Wrap"
+                     Foreground="#B91C1C"
+                     FontSize="13"
+                     Margin="16,0,0,0"
+                     IsVisible="{Binding InnerMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+          <TextBlock Text="{Binding InnerInnerMessage}"
+                     TextWrapping="Wrap"
+                     Foreground="#991B1B"
+                     FontSize="12"
+                     Margin="32,0,0,0"
+                     IsVisible="{Binding InnerInnerMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Close Button -->
+      <Button Grid.Row="2"
+              Content="OK"
+              Classes="primary"
+              HorizontalAlignment="Right"
+              Click="CloseButton_Click" />
+    </Grid>
+  </Border>
+</Window>

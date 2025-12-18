@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>LicenseManagement.EndUser.Avalonia</RootNamespace>
+    <AssemblyName>LicenseManagement.EndUser.Avalonia</AssemblyName>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>LicenseManagement.EndUser.Avalonia</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>HYMMA</Authors>
+    <Company>HYMMA</Company>
+    <Product>LicenseManagement.EndUser.Avalonia</Product>
+    <Description>Avalonia UI components for license-management.com end-user SDK. Provides ready-to-use Window and UserControl components, view models, and converters for license registration and management workflows. Windows support (cross-platform requires netstandard EndUser package).</Description>
+    <Copyright>Copyright (c) HYMMA 2024</Copyright>
+    <PackageProjectUrl>https://github.com/HYMMA/LicenseManagement.EndUser.Avalonia</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/HYMMA/LicenseManagement.EndUser.Avalonia.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>license licensing avalonia ui components views viewmodels usercontrol hymma license-management windows</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+    <AvaloniaResource Include="Themes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="samples\**" />
+    <Content Remove="samples\**" />
+    <EmbeddedResource Remove="samples\**" />
+    <None Remove="samples\**" />
+    <AvaloniaResource Remove="samples\**" />
+    <AvaloniaXaml Remove="samples\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="LicenseManagement.EndUser" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

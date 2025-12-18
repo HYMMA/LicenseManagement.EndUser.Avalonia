@@ -1,0 +1,82 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:LicenseManagement.EndUser.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="220"
+        x:Class="LicenseManagement.EndUser.Avalonia.Views.UnregisterView"
+        x:DataType="vm:UnregisterViewModel"
+        Title="Release License"
+        Width="400"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        x:Name="ThisWindow">
+
+  <Window.Styles>
+    <StyleInclude Source="avares://LicenseManagement.EndUser.Avalonia/Themes/LicenseTheme.axaml" />
+  </Window.Styles>
+
+  <Border Classes="card" Margin="0" CornerRadius="0" BorderThickness="0">
+    <StackPanel Spacing="20">
+      <!-- Header -->
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <Border Background="#FEF2F2" CornerRadius="8" Padding="10">
+          <TextBlock Text="⚠" FontSize="20" />
+        </Border>
+        <StackPanel>
+          <TextBlock Text="Release License" Classes="heading" />
+          <TextBlock Text="Remove license from this computer"
+                     Classes="muted"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Warning Message -->
+      <Border Background="#FFF7ED" CornerRadius="8" Padding="16">
+        <TextBlock Text="Do you want to break the link between this computer and the license? This will allow you to use the license on another computer."
+                   TextWrapping="Wrap"
+                   Foreground="#9A3412"
+                   FontSize="14"
+                   LineHeight="22" />
+      </Border>
+
+      <!-- Error Message -->
+      <Border Background="#FEF2F2"
+              CornerRadius="8"
+              Padding="12"
+              IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding ErrorMessage}"
+                   Foreground="#DC2626"
+                   TextWrapping="Wrap"
+                   FontSize="13" />
+      </Border>
+
+      <!-- Loading Indicator -->
+      <StackPanel Orientation="Horizontal"
+                  Spacing="12"
+                  HorizontalAlignment="Center"
+                  IsVisible="{Binding IsProcessing}">
+        <TextBlock Text="Releasing license..." Classes="muted" VerticalAlignment="Center" />
+      </StackPanel>
+
+      <!-- Buttons -->
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <Button Grid.Column="1"
+                Content="Cancel"
+                Classes="secondary"
+                Command="{Binding CancelCommand}"
+                CommandParameter="{Binding #ThisWindow}"
+                Margin="0,0,12,0"
+                IsEnabled="{Binding !IsProcessing}" />
+        <Button Grid.Column="2"
+                Content="Release License"
+                Classes="danger"
+                Command="{Binding UnregisterCommand}"
+                CommandParameter="{Binding #ThisWindow}"
+                IsEnabled="{Binding !IsProcessing}" />
+      </Grid>
+    </StackPanel>
+  </Border>
+</Window>

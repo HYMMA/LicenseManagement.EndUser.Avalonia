@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:LicenseManagement.EndUser.Avalonia.Views"
+        xmlns:vm="clr-namespace:LicenseManagement.EndUser.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="650" d:DesignHeight="500"
+        x:Class="LicenseManagement.EndUser.Avalonia.Views.LicenseWindow"
+        x:DataType="vm:LicenseViewModel"
+        Title="License Management"
+        Width="650"
+        MinWidth="550"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        x:Name="ThisWindow">
+
+  <Window.Styles>
+    <StyleInclude Source="avares://LicenseManagement.EndUser.Avalonia/Themes/LicenseTheme.axaml" />
+  </Window.Styles>
+
+  <Border Background="#F8FAFC" Padding="24">
+    <views:LicenseControl x:Name="LicenseControlElement" />
+  </Border>
+</Window>
