@@ -1,4 +1,6 @@
+using System;
 using System.Collections.ObjectModel;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using LicenseManagement.EndUser.Avalonia.ViewModels;
@@ -16,6 +18,9 @@ public partial class MainWindow : Window
     private const string PublicKey = @"<RSAKeyValue><Modulus>your-public-key-modulus</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>";
     private const uint ValidDays = 30;
 
+    // Breakpoint for responsive layout switching
+    private const double NarrowBreakpoint = 700;
+
     private readonly ObservableCollection<ProductViewModel> _products;
 
     public MainWindow()
@@ -29,6 +34,35 @@ public partial class MainWindow : Window
 
         // Initialize the embedded license control
         InitializeLicenseControl();
+
+        // Subscribe to size changes for responsive layout
+        this.GetObservable(BoundsProperty).Subscribe(new BoundsObserver(this));
+    }
+
+    private class BoundsObserver : IObserver<Rect>
+    {
+        private readonly MainWindow _window;
+        public BoundsObserver(MainWindow window) => _window = window;
+        public void OnCompleted() { }
+        public void OnError(Exception error) { }
+        public void OnNext(Rect value) => _window.UpdateLayout(value.Width);
+    }
+
+    private void UpdateLayout(double width)
+    {
+        var isNarrow = width < NarrowBreakpoint;
+
+        WideLayout.IsVisible = !isNarrow;
+        NarrowLayout.IsVisible = isNarrow;
+
+        // Sync license data between layouts
+        if (isNarrow)
+        {
+            EmbeddedLicenseControlNarrow.License = EmbeddedLicenseControl.License;
+        }
+
+        // Update button states for active layout
+        UpdateFeatureButtons();
     }
 
     private void InitializeLicenseControl()
@@ -61,9 +95,15 @@ public partial class MainWindow : Window
         var hasAnyLicense = license?.Status == LicenseStatusTitles.Valid ||
                            license?.Status == LicenseStatusTitles.ValidTrial;
 
+        // Wide layout buttons
         BasicFeatureBtn.IsEnabled = hasAnyLicense;
         PremiumFeatureBtn.IsEnabled = isPaidLicense;
         ExportFeatureBtn.IsEnabled = isPaidLicense;
+
+        // Narrow layout buttons
+        BasicFeatureBtnNarrow.IsEnabled = hasAnyLicense;
+        PremiumFeatureBtnNarrow.IsEnabled = isPaidLicense;
+        ExportFeatureBtnNarrow.IsEnabled = isPaidLicense;
     }
 
     private async void OpenLicenseWindow_Click(object? sender, RoutedEventArgs e)
@@ -131,9 +171,19 @@ public partial class MainWindow : Window
 
     private void ShowStatus(string message, string bgColor, string textColor)
     {
+        var bgBrush = global::Avalonia.Media.SolidColorBrush.Parse(bgColor);
+        var textBrush = global::Avalonia.Media.SolidColorBrush.Parse(textColor);
+
+        // Wide layout status
         StatusText.Text = message;
-        StatusBorder.Background = global::Avalonia.Media.SolidColorBrush.Parse(bgColor);
-        StatusText.Foreground = global::Avalonia.Media.SolidColorBrush.Parse(textColor);
+        StatusBorder.Background = bgBrush;
+        StatusText.Foreground = textBrush;
         StatusBorder.IsVisible = true;
+
+        // Narrow layout status
+        StatusTextNarrow.Text = message;
+        StatusBorderNarrow.Background = bgBrush;
+        StatusTextNarrow.Foreground = textBrush;
+        StatusBorderNarrow.IsVisible = true;
     }
 }
