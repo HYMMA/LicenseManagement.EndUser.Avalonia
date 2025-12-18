@@ -1,6 +1,16 @@
 # LicenseManagement.EndUser.Avalonia
 
+[![Build and Test](https://github.com/HYMMA/LicenseManagement.EndUser.Avalonia/actions/workflows/build.yml/badge.svg)](https://github.com/HYMMA/LicenseManagement.EndUser.Avalonia/actions/workflows/build.yml)
+[![NuGet](https://img.shields.io/nuget/v/LicenseManagement.EndUser.Avalonia.svg)](https://www.nuget.org/packages/LicenseManagement.EndUser.Avalonia)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/LicenseManagement.EndUser.Avalonia.svg)](https://www.nuget.org/packages/LicenseManagement.EndUser.Avalonia)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Avalonia UI components for [license-management.com](https://license-management.com) end-user SDK. Provides ready-to-use Window and UserControl components, view models, and converters for license registration and management workflows.
+
+> [!IMPORTANT]
+> **Account Required**: This library requires a publisher account at [license-management.com](https://license-management.com).
+>
+> **Free with Dev Subscription**: A developer subscription is available at no cost, which provides full access to all features for development and testing purposes.
 
 ## Features
 
