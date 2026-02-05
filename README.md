@@ -113,6 +113,8 @@ switch (license?.Status)
 }
 ```
 
+> Trial period length is controlled by the server and embedded in the license file as `TrialEndDate`. If a trial is extended in the dashboard, the updated `TrialEndDate` will appear after the client refreshes the license file.
+
 ## Requirements
 
 - .NET 8.0 or later
