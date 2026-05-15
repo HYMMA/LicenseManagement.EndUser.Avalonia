@@ -1,106 +1,101 @@
 using System;
-using System.Windows.Input;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Avalonia.Controls;
-using LicenseManagement.EndUser.Avalonia.Commands;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using LicenseManagement.EndUser.Avalonia.Services;
 using LicenseManagement.EndUser.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LicenseManagement.EndUser.Avalonia.ViewModels;
 
-public class RegisterLicenseViewModel : BaseViewModel
+/// <summary>
+/// View model for <c>RegisterLicenseView</c>. Driven by an injected
+/// <see cref="ILicenseService"/> so it can be unit-tested without spinning
+/// up Avalonia and the underlying SDK.
+/// </summary>
+public sealed partial class RegisterLicenseViewModel : ObservableObject
 {
+    private readonly ILicenseService _licenseService;
+    private readonly IDialogService _dialogService;
+    private readonly ILogger<RegisterLicenseViewModel> _logger;
+    private readonly LicenseCredentials _credentials;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RegisterCommand))]
     private string? _receiptCode;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RegisterCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     private bool _isProcessing;
+
+    [ObservableProperty]
     private string? _errorMessage;
 
-    public string? PublicKey { get; set; }
-    public string? ApiKey { get; set; }
-    public string? VendorId { get; set; }
-    public string? ProductId { get; set; }
-    public uint ValidDays { get; set; }
-
-    public string? ReceiptCode
+    public RegisterLicenseViewModel(
+        LicenseCredentials credentials,
+        ILicenseService licenseService,
+        IDialogService dialogService,
+        ILogger<RegisterLicenseViewModel>? logger = null)
     {
-        get => _receiptCode;
-        set => SetProperty(ref _receiptCode, value);
+        _credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+        _licenseService = licenseService ?? throw new ArgumentNullException(nameof(licenseService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _logger = logger ?? NullLogger<RegisterLicenseViewModel>.Instance;
     }
 
-    public bool IsProcessing
+    /// <summary>Invoked when registration succeeds. The parent VM uses this
+    /// to refresh the license panel state.</summary>
+    public Action<LicenseModel?>? OnRegistrationComplete { get; set; }
+
+    private bool CanRegister() => !IsProcessing && !string.IsNullOrWhiteSpace(ReceiptCode);
+
+    [RelayCommand(CanExecute = nameof(CanRegister))]
+    private async Task RegisterAsync(object? parameter)
     {
-        get => _isProcessing;
-        set => SetProperty(ref _isProcessing, value);
-    }
-
-    public string? ErrorMessage
-    {
-        get => _errorMessage;
-        set => SetProperty(ref _errorMessage, value);
-    }
-
-    public ICommand RegisterCommand => new RelayCommand(RegisterAction, CanRegisterNewLicense);
-    public ICommand CancelCommand => new RelayCommand(CancelAction);
-
-    public Action? OnRegistrationComplete { get; set; }
-
-    private bool CanRegisterNewLicense(object? obj) => ApiKey != null && !IsProcessing;
-
-    private void RegisterAction(object? obj)
-    {
-        if (string.IsNullOrEmpty(ReceiptCode))
-        {
-            ErrorMessage = "Please enter a receipt code";
-            return;
-        }
-
+        var window = parameter as Window;
         ErrorMessage = null;
         IsProcessing = true;
 
         try
         {
-            var pref = new PublisherPreferences(VendorId!, ProductId!, ApiKey!)
-            {
-                PublicKey = PublicKey,
-                ValidDays = ValidDays,
-            };
-            var context = new LicHandlingContext(pref);
-            var handler = new LicenseHandlingLaunch(context,
-                OnCustomerMustEnterProductKey: GetNewReceiptCode,
-                OnLicFileNotFound: GetNewLicFile,
-                OnTrialEnded: ChangeDefaultTrial,
-                OnComputerUnregistered: ComputerUnregistered,
-                OnTrialValidated: GetNewReceiptCode,
-                OnLicenseHandledSuccessfully: (l) =>
-                {
-                    IsProcessing = false;
-                    OnRegistrationComplete?.Invoke();
-                    if (obj is Window window)
-                        window.Close();
-                });
+            var result = await _licenseService.RegisterAsync(_credentials, ReceiptCode!).ConfigureAwait(true);
 
-            handler.HandleLicense();
+            if (result.Success)
+            {
+                _logger.LogInformation("Registration succeeded. CorrelationId={CorrelationId}", result.CorrelationId);
+                OnRegistrationComplete?.Invoke(result.Model);
+                window?.Close();
+                return;
+            }
+
+            ErrorMessage = LicenseErrorPresenter.Describe(result.ErrorKind, result.Exception);
+            if (result.Exception is not null)
+            {
+                await _dialogService.ShowErrorAsync(result.Exception, result.CorrelationId, window).ConfigureAwait(true);
+            }
         }
-        catch (Exception e)
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in RegisterAsync");
+            ErrorMessage = LicenseErrorPresenter.Describe(LicenseErrorKind.Unknown, ex);
+            await _dialogService.ShowErrorAsync(ex, null, window).ConfigureAwait(true);
+        }
+        finally
         {
             IsProcessing = false;
-            ErrorMessage = e.Message;
-            ShowErrorView(e, obj as Control);
         }
     }
 
-    private void GetNewLicFile(LicHandlingContext context)
+    private bool CanCancel() => !IsProcessing;
+
+    [RelayCommand(CanExecute = nameof(CanCancel))]
+    private void Cancel(object? parameter)
     {
-        var handler = new LicenseHandlingInstall(context, null);
-        handler.HandleLicense();
-    }
-
-    private string GetNewReceiptCode() => ReceiptCode ?? string.Empty;
-
-    private void ChangeDefaultTrial(PublisherPreferences preferences) { }
-
-    private void ComputerUnregistered(ComputerModel model) { }
-
-    private void CancelAction(object? obj)
-    {
-        if (obj is Window window)
+        if (parameter is Window window)
             window.Close();
     }
 }

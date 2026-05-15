@@ -1,8 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using LicenseManagement.EndUser.Avalonia.Services;
 using LicenseManagement.EndUser.Avalonia.ViewModels;
 using LicenseManagement.EndUser.Avalonia.Views;
 using LicenseManagement.EndUser.License;
@@ -11,35 +13,82 @@ namespace AvaloniaSampleApp;
 
 public partial class MainWindow : Window
 {
-    // IMPORTANT: Replace these with your actual values from license-management.com
-    private const string VendorId = "VND_01EXAMPLE00000000000000001";
-    private const string ProductId = "PRD_01EXAMPLE00000000000000001";
-    private const string ApiKey = "your-api-key-here";
-    private const string PublicKey = @"<RSAKeyValue><Modulus>your-public-key-modulus</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>";
-    private const uint ValidDays = 30;
-
-    // Breakpoint for responsive layout switching
     private const double NarrowBreakpoint = 700;
+    private const string SuccessBackground = "#DCFCE7";
+    private const string SuccessForeground = "#166534";
+    private const string WarningBackground = "#FEF3C7";
+    private const string WarningForeground = "#92400E";
+    private const string ErrorBackground = "#FEE2E2";
+    private const string ErrorForeground = "#991B1B";
 
-    private readonly ObservableCollection<ProductViewModel> _products;
+    private readonly MainWindowViewModel _viewModel = new();
+    private readonly ObservableCollection<ProductViewModel> _products = new();
+    private IDisposable? _boundsSubscription;
+    private LicenseCredentials? _credentials;
 
     public MainWindow()
     {
         InitializeComponent();
+        DataContext = _viewModel;
 
-        _products = new ObservableCollection<ProductViewModel>
-        {
-            new ProductViewModel { Id = ProductId, Name = "Sample Product" }
-        };
+        _ = InitializeLicenseAsync();
 
-        // Initialize the embedded license control
-        InitializeLicenseControl();
-
-        // Subscribe to size changes for responsive layout
-        this.GetObservable(BoundsProperty).Subscribe(new BoundsObserver(this));
+        _boundsSubscription = this.GetObservable(BoundsProperty).Subscribe(new BoundsObserver(this));
     }
 
-    private class BoundsObserver : IObserver<Rect>
+    protected override void OnClosed(EventArgs e)
+    {
+        _boundsSubscription?.Dispose();
+        _boundsSubscription = null;
+        base.OnClosed(e);
+    }
+
+    private async Task InitializeLicenseAsync()
+    {
+        try
+        {
+            _credentials = LicenseConfig.Load();
+            _products.Add(new ProductViewModel { Id = _credentials.ProductId, Name = "Sample Product" });
+
+            await EmbeddedLicenseControl.InitializeAsync(_credentials, _products);
+            _viewModel.License = EmbeddedLicenseControl.License;
+        }
+        catch (Exception ex)
+        {
+            // Placeholders are expected when the sample is run as-is.
+            // Surface a mocked license so the UI still renders.
+            ShowMockedLicense(ex.Message);
+        }
+    }
+
+    private void ShowMockedLicense(string reason)
+    {
+        var mock = new LicenseViewModel
+        {
+            VendorName = "Sample Vendor",
+            Products = _products,
+            ComputerName = Environment.MachineName,
+            Status = LicenseStatusTitles.ValidTrial,
+            TrialExpires = DateTime.UtcNow.AddDays(14),
+            Expires = DateTime.UtcNow.AddDays(30)
+        };
+        if (_products.Count == 0)
+            _products.Add(new ProductViewModel { Id = "PRD_SAMPLE", Name = "Sample Product" });
+        mock.Product = _products[0];
+        EmbeddedLicenseControl.License = mock;
+        _viewModel.License = mock;
+        _viewModel.ShowStatus(
+            $"Running with mocked credentials: {reason}",
+            WarningBackground,
+            WarningForeground);
+    }
+
+    private void UpdateLayout(double width)
+    {
+        _viewModel.IsNarrow = width < NarrowBreakpoint;
+    }
+
+    private sealed class BoundsObserver : IObserver<Rect>
     {
         private readonly MainWindow _window;
         public BoundsObserver(MainWindow window) => _window = window;
@@ -48,142 +97,67 @@ public partial class MainWindow : Window
         public void OnNext(Rect value) => _window.UpdateLayout(value.Width);
     }
 
-    private void UpdateLayout(double width)
-    {
-        var isNarrow = width < NarrowBreakpoint;
-
-        WideLayout.IsVisible = !isNarrow;
-        NarrowLayout.IsVisible = isNarrow;
-
-        // Sync license data between layouts
-        if (isNarrow)
-        {
-            EmbeddedLicenseControlNarrow.License = EmbeddedLicenseControl.License;
-        }
-
-        // Update button states for active layout
-        UpdateFeatureButtons();
-    }
-
-    private void InitializeLicenseControl()
-    {
-        // In a real application, use your actual credentials
-        // For demo purposes, we'll create a mock license view model
-        var mockLicense = new LicenseViewModel
-        {
-            VendorId = VendorId,
-            VendorName = "Sample Vendor",
-            ApiKey = ApiKey,
-            PublicKey = PublicKey,
-            ValidDays = ValidDays,
-            Products = _products,
-            Product = _products[0],
-            ComputerName = System.Environment.MachineName,
-            Status = LicenseStatusTitles.ValidTrial,
-            TrialExpires = System.DateTime.UtcNow.AddDays(14),
-            Expires = System.DateTime.UtcNow.AddDays(30),
-        };
-
-        EmbeddedLicenseControl.License = mockLicense;
-        UpdateFeatureButtons();
-    }
-
-    private void UpdateFeatureButtons()
-    {
-        var license = EmbeddedLicenseControl.License;
-        var isPaidLicense = license?.Status == LicenseStatusTitles.Valid;
-        var hasAnyLicense = license?.Status == LicenseStatusTitles.Valid ||
-                           license?.Status == LicenseStatusTitles.ValidTrial;
-
-        // Wide layout buttons
-        BasicFeatureBtn.IsEnabled = hasAnyLicense;
-        PremiumFeatureBtn.IsEnabled = isPaidLicense;
-        ExportFeatureBtn.IsEnabled = isPaidLicense;
-
-        // Narrow layout buttons
-        BasicFeatureBtnNarrow.IsEnabled = hasAnyLicense;
-        PremiumFeatureBtnNarrow.IsEnabled = isPaidLicense;
-        ExportFeatureBtnNarrow.IsEnabled = isPaidLicense;
-    }
-
     private async void OpenLicenseWindow_Click(object? sender, RoutedEventArgs e)
     {
-        // Show the standalone license window
-        var licenseWindow = new LicenseWindow();
-        licenseWindow.License = EmbeddedLicenseControl.License;
+        try
+        {
+            var licenseWindow = new LicenseWindow();
+            if (_credentials is not null)
+            {
+                _ = licenseWindow.InitializeAsync(_credentials, _products);
+            }
+            else
+            {
+                licenseWindow.License = EmbeddedLicenseControl.License;
+            }
 
-        await licenseWindow.ShowDialog(this);
-
-        // After the window closes, update the embedded control
-        UpdateFeatureButtons();
+            await licenseWindow.ShowDialog(this);
+            _viewModel.License = EmbeddedLicenseControl.License;
+        }
+        catch (Exception ex)
+        {
+            _viewModel.ShowStatus($"Could not open license window: {ex.Message}", ErrorBackground, ErrorForeground);
+        }
     }
 
-    private void RefreshLicense_Click(object? sender, RoutedEventArgs e)
+    private async void RefreshLicense_Click(object? sender, RoutedEventArgs e)
     {
-        EmbeddedLicenseControl.License?.CheckLicenseFile(EmbeddedLicenseControl);
-        UpdateFeatureButtons();
-        ShowStatus("License status refreshed!", "#DCFCE7", "#166534");
+        try
+        {
+            var license = EmbeddedLicenseControl.License;
+            if (license is not null)
+                await license.CheckLicenseFileAsync(EmbeddedLicenseControl);
+            _viewModel.ShowStatus("License status refreshed!", SuccessBackground, SuccessForeground);
+        }
+        catch (Exception ex)
+        {
+            _viewModel.ShowStatus($"Refresh failed: {ex.Message}", ErrorBackground, ErrorForeground);
+        }
     }
 
     private void BasicFeature_Click(object? sender, RoutedEventArgs e)
     {
-        var license = EmbeddedLicenseControl.License;
-        if (license?.Status == LicenseStatusTitles.Valid ||
-            license?.Status == LicenseStatusTitles.ValidTrial)
-        {
-            ShowStatus("Basic feature executed successfully!", "#DCFCE7", "#166534");
-        }
+        if (_viewModel.HasAnyLicense)
+            _viewModel.ShowStatus("Basic feature executed successfully!", SuccessBackground, SuccessForeground);
         else
-        {
-            ShowStatus("Please activate your license to use this feature.", "#FEF3C7", "#92400E");
-        }
+            _viewModel.ShowStatus("Please activate your license to use this feature.", WarningBackground, WarningForeground);
     }
 
     private void PremiumFeature_Click(object? sender, RoutedEventArgs e)
     {
-        var license = EmbeddedLicenseControl.License;
-        if (license?.Status == LicenseStatusTitles.Valid)
-        {
-            ShowStatus("Premium feature executed successfully!", "#DCFCE7", "#166534");
-        }
-        else if (license?.Status == LicenseStatusTitles.ValidTrial)
-        {
-            ShowStatus("Premium features require a paid license. Please register your product key.", "#FEF3C7", "#92400E");
-        }
+        if (_viewModel.HasPaidLicense)
+            _viewModel.ShowStatus("Premium feature executed successfully!", SuccessBackground, SuccessForeground);
+        else if (_viewModel.HasAnyLicense)
+            _viewModel.ShowStatus("Premium features require a paid license. Please register your product key.", WarningBackground, WarningForeground);
         else
-        {
-            ShowStatus("Please activate your license to use this feature.", "#FEE2E2", "#991B1B");
-        }
+            _viewModel.ShowStatus("Please activate your license to use this feature.", ErrorBackground, ErrorForeground);
     }
 
     private void ExportFeature_Click(object? sender, RoutedEventArgs e)
     {
-        var license = EmbeddedLicenseControl.License;
-        if (license?.Status == LicenseStatusTitles.Valid)
-        {
-            ShowStatus("Data exported successfully!", "#DCFCE7", "#166534");
-        }
+        if (_viewModel.HasPaidLicense)
+            _viewModel.ShowStatus("Data exported successfully!", SuccessBackground, SuccessForeground);
         else
-        {
-            ShowStatus("Export feature requires a paid license.", "#FEF3C7", "#92400E");
-        }
-    }
-
-    private void ShowStatus(string message, string bgColor, string textColor)
-    {
-        var bgBrush = global::Avalonia.Media.SolidColorBrush.Parse(bgColor);
-        var textBrush = global::Avalonia.Media.SolidColorBrush.Parse(textColor);
-
-        // Wide layout status
-        StatusText.Text = message;
-        StatusBorder.Background = bgBrush;
-        StatusText.Foreground = textBrush;
-        StatusBorder.IsVisible = true;
-
-        // Narrow layout status
-        StatusTextNarrow.Text = message;
-        StatusBorderNarrow.Background = bgBrush;
-        StatusTextNarrow.Foreground = textBrush;
-        StatusBorderNarrow.IsVisible = true;
+            _viewModel.ShowStatus("Export feature requires a paid license.", WarningBackground, WarningForeground);
     }
 }

@@ -1,44 +1,56 @@
 using System;
-using System.Windows.Input;
-using LicenseManagement.EndUser.Avalonia.Commands;
+using System.Diagnostics;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using LicenseManagement.EndUser.Avalonia.Services;
 
 namespace LicenseManagement.EndUser.Avalonia.ViewModels;
 
-public class ErrorViewModel : BaseViewModel
+/// <summary>
+/// View model for <c>ErrorView</c>. Surfaces a sanitised, user-facing
+/// message rather than the raw exception text so internal details from
+/// <c>ApiException</c> (which may include partial payloads) do not leak
+/// into the UI.
+/// </summary>
+public sealed partial class ErrorViewModel : ObservableObject
 {
+    [ObservableProperty]
     private string? _message;
-    private string? _innerMessage;
-    private string? _innerInnerMessage;
+
+    [ObservableProperty]
+    private string? _correlationId;
 
     public ErrorViewModel()
     {
-        CloseCommand = new RelayCommand(_ => { }, _ => true);
     }
 
-    public ErrorViewModel(Exception ex) : this()
+    public ErrorViewModel(Exception ex, string? correlationId = null)
     {
-        Message = ex.Message;
-        InnerMessage = ex.InnerException?.Message;
-        InnerInnerMessage = ex.InnerException?.InnerException?.Message;
+        ArgumentNullException.ThrowIfNull(ex);
+        var kind = LicenseService.Classify(ex);
+        Message = LicenseErrorPresenter.Describe(kind, ex);
+        CorrelationId = correlationId;
     }
 
-    public string? Message
+    public bool HasCorrelationId => !string.IsNullOrWhiteSpace(CorrelationId);
+
+    partial void OnCorrelationIdChanged(string? value) => OnPropertyChanged(nameof(HasCorrelationId));
+
+    [RelayCommand]
+    private void CopyCorrelationId()
     {
-        get => _message;
-        set => SetProperty(ref _message, value);
+        if (string.IsNullOrWhiteSpace(CorrelationId)) return;
+        try
+        {
+            var clipboard = global::Avalonia.Application.Current?.ApplicationLifetime
+                is global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow?.Clipboard
+                    : null;
+            clipboard?.SetTextAsync(CorrelationId);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Could not copy correlation id: {ex.Message}");
+        }
     }
-
-    public string? InnerMessage
-    {
-        get => _innerMessage;
-        set => SetProperty(ref _innerMessage, value);
-    }
-
-    public string? InnerInnerMessage
-    {
-        get => _innerInnerMessage;
-        set => SetProperty(ref _innerInnerMessage, value);
-    }
-
-    public ICommand CloseCommand { get; }
 }

@@ -25,9 +25,6 @@
     <converters:LicenseStatusToTrialVisibilityConverter x:Key="LicenseStatusToTrialVisibilityConverter" />
     <converters:UtcToLocalTimeConverter x:Key="UtcToLocalTimeConverter" />
     <converters:NullableDateTimeToStringConverter x:Key="NullableDateTimeToStringConverter" />
-    <converters:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter" />
-    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-    <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
 
     <!-- Colors -->
     <Color x:Key="PrimaryColor">#3B82F6</Color>
@@ -44,6 +41,9 @@
     <Color x:Key="TextPrimaryColor">#1E293B</Color>
     <Color x:Key="TextSecondaryColor">#64748B</Color>
     <Color x:Key="TextMutedColor">#94A3B8</Color>
+    <Color x:Key="IconBlueBackgroundColor">#F0F9FF</Color>
+    <Color x:Key="IconRedBackgroundColor">#FEF2F2</Color>
+    <Color x:Key="ErrorTextColor">#DC2626</Color>
 
     <!-- Brushes -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
@@ -59,6 +59,16 @@
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
     <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}" />
+    <SolidColorBrush x:Key="IconBlueBackgroundBrush" Color="{StaticResource IconBlueBackgroundColor}" />
+    <SolidColorBrush x:Key="IconRedBackgroundBrush" Color="{StaticResource IconRedBackgroundColor}" />
+    <SolidColorBrush x:Key="ErrorTextBrush" Color="{StaticResource ErrorTextColor}" />
+
+    <!-- Vector icons (Fluent System Icons subset). Cross-platform safe — no
+         emoji fallback fonts required. -->
+    <StreamGeometry x:Key="LicenseDocumentIcon">M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V7h3.5L14 3.5zM7 12h10v1.5H7V12zm0 3h10v1.5H7V15zm0 3h7v1.5H7V18z</StreamGeometry>
+    <StreamGeometry x:Key="KeyIcon">M14 4a6 6 0 0 0-5.83 7.43L3 16.6V21h4.4l1.4-1.4v-2h2v-2h2l1.27-1.27A6 6 0 1 0 14 4zm2.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z</StreamGeometry>
+    <StreamGeometry x:Key="WarningIcon">M12 2 1 21h22L12 2zm0 6 7.5 13h-15L12 8zm-1 3v5h2v-5h-2zm0 6v2h2v-2h-2z</StreamGeometry>
+    <StreamGeometry x:Key="ErrorIcon">M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 5h2v7h-2V7zm0 9h2v2h-2v-2z</StreamGeometry>
   </Styles.Resources>
 
   <!-- Primary Button -->
@@ -71,7 +81,7 @@
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Cursor" Value="Hand" />
   </Style>
-  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+  <Style Selector="Button.primary:pointerover">
     <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}" />
   </Style>
 
@@ -86,7 +96,7 @@
     <Setter Property="FontWeight" Value="Medium" />
     <Setter Property="Cursor" Value="Hand" />
   </Style>
-  <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+  <Style Selector="Button.secondary:pointerover">
     <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
   </Style>
 
@@ -100,7 +110,7 @@
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Cursor" Value="Hand" />
   </Style>
-  <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+  <Style Selector="Button.danger:pointerover">
     <Setter Property="Background" Value="{StaticResource DangerHoverBrush}" />
   </Style>
 
@@ -151,9 +161,8 @@
     <Setter Property="Padding" Value="12,10" />
     <Setter Property="FontSize" Value="14" />
   </Style>
-  <Style Selector="TextBox.modern:focus /template/ Border">
+  <Style Selector="TextBox.modern:focus">
     <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
-    <Setter Property="BorderThickness" Value="2" />
   </Style>
 
   <!-- ComboBox Style -->
@@ -165,9 +174,27 @@
     <Setter Property="MinWidth" Value="180" />
   </Style>
 
-  <!-- Info Row Style -->
-  <Style Selector="Grid.info-row">
-    <Setter Property="Margin" Value="0,6" />
+  <!-- Spinner animation for indeterminate progress indicators -->
+  <Style Selector="Border.spinner">
+    <Setter Property="Width" Value="20" />
+    <Setter Property="Height" Value="20" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+    <Setter Property="RenderTransform">
+      <RotateTransform />
+    </Setter>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+    <Style.Animations>
+      <Animation Duration="0:0:1" IterationCount="Infinite">
+        <KeyFrame Cue="0%">
+          <Setter Property="RotateTransform.Angle" Value="0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="RotateTransform.Angle" Value="360" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
   </Style>
 
 </Styles>

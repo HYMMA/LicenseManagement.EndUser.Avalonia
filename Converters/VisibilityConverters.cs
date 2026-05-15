@@ -1,141 +1,54 @@
 using System;
 using System.Globalization;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
+using LicenseManagement.EndUser.Avalonia.Services;
 using LicenseManagement.EndUser.License;
 
 namespace LicenseManagement.EndUser.Avalonia.Converters;
 
-public class BoolToVisibilityConverter : IValueConverter
+/// <summary>
+/// Returns <c>true</c> when the supplied <see cref="LicenseStatusTitles"/>
+/// should show the matching action button. Selector is provided by
+/// subclasses so the lookup remains centralised in
+/// <see cref="LicenseStatusPresenter"/>.
+/// </summary>
+public abstract class LicenseStatusVisibilityConverterBase : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is bool boolValue)
-            return boolValue;
-        return true;
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class InverseBoolToVisibilityConverter : IValueConverter
-{
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is bool boolValue)
-            return !boolValue;
-        return false;
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class LicenseStatusToRegisterVisibilityConverter : IValueConverter
-{
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return true;
-
-        return status switch
-        {
-            LicenseStatusTitles.Expired => false,
-            LicenseStatusTitles.Valid => false,
-            _ => true
-        };
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class LicenseStatusToUnregisterVisibilityConverter : IValueConverter
-{
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not LicenseStatusTitles status)
             return false;
-
-        return status == LicenseStatusTitles.Valid;
+        return Select(LicenseStatusPresenter.For(status));
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        BindingOperations.DoNothing;
+
+    protected abstract bool Select(LicenseStatusPresentation presentation);
 }
 
-public class LicenseStatusToRenewVisibilityConverter : IValueConverter
+public sealed class LicenseStatusToRegisterVisibilityConverter : LicenseStatusVisibilityConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return false;
-
-        return status == LicenseStatusTitles.Expired;
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    protected override bool Select(LicenseStatusPresentation p) => p.ShowRegister;
 }
 
-public class LicenseStatusToSubscriptionVisibilityConverter : IValueConverter
+public sealed class LicenseStatusToUnregisterVisibilityConverter : LicenseStatusVisibilityConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return true;
-
-        return status switch
-        {
-            LicenseStatusTitles.ReceiptExpired => false,
-            LicenseStatusTitles.ValidTrial => false,
-            LicenseStatusTitles.InvalidTrial => false,
-            LicenseStatusTitles.ReceiptUnregistered => false,
-            _ => true
-        };
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    protected override bool Select(LicenseStatusPresentation p) => p.ShowUnregister;
 }
 
-public class LicenseStatusToTrialVisibilityConverter : IValueConverter
+public sealed class LicenseStatusToRenewVisibilityConverter : LicenseStatusVisibilityConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return false;
-
-        return status == LicenseStatusTitles.ValidTrial;
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    protected override bool Select(LicenseStatusPresentation p) => p.ShowRenew;
 }
 
-public class StringNotNullOrEmptyConverter : IValueConverter
+public sealed class LicenseStatusToSubscriptionVisibilityConverter : LicenseStatusVisibilityConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        return !string.IsNullOrEmpty(value?.ToString());
-    }
+    protected override bool Select(LicenseStatusPresentation p) => p.ShowSubscriptionDetails;
+}
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+public sealed class LicenseStatusToTrialVisibilityConverter : LicenseStatusVisibilityConverterBase
+{
+    protected override bool Select(LicenseStatusPresentation p) => p.ShowTrialDetails;
 }

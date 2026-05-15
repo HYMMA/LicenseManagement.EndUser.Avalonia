@@ -10,6 +10,7 @@
         Title="License Management"
         Width="650"
         MinWidth="550"
+        MinHeight="500"
         SizeToContent="Height"
         WindowStartupLocation="CenterScreen"
         x:Name="ThisWindow">

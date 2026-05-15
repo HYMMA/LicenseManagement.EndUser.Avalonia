@@ -1,71 +1,88 @@
 using System;
-using System.Windows.Input;
+using System.Threading.Tasks;
 using Avalonia.Controls;
-using LicenseManagement.EndUser.Avalonia.Commands;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using LicenseManagement.EndUser.Avalonia.Services;
+using LicenseManagement.EndUser.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LicenseManagement.EndUser.Avalonia.ViewModels;
 
-public class UnregisterViewModel : BaseViewModel
+public sealed partial class UnregisterViewModel : ObservableObject
 {
+    private readonly ILicenseService _licenseService;
+    private readonly IDialogService _dialogService;
+    private readonly ILogger<UnregisterViewModel> _logger;
+    private readonly LicenseCredentials _credentials;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(UnregisterCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelCommand))]
     private bool _isProcessing;
+
+    [ObservableProperty]
     private string? _errorMessage;
 
-    public string? VendorId { get; set; }
-    public string? ProductId { get; set; }
-    public string? ApiKey { get; set; }
-    public string? PublicKey { get; set; }
-
-    public bool IsProcessing
+    public UnregisterViewModel(
+        LicenseCredentials credentials,
+        ILicenseService licenseService,
+        IDialogService dialogService,
+        ILogger<UnregisterViewModel>? logger = null)
     {
-        get => _isProcessing;
-        set => SetProperty(ref _isProcessing, value);
+        _credentials = credentials ?? throw new ArgumentNullException(nameof(credentials));
+        _licenseService = licenseService ?? throw new ArgumentNullException(nameof(licenseService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _logger = logger ?? NullLogger<UnregisterViewModel>.Instance;
     }
 
-    public string? ErrorMessage
+    public Action<LicenseModel?>? OnUnregisterComplete { get; set; }
+
+    private bool CanUnregister() => !IsProcessing;
+
+    [RelayCommand(CanExecute = nameof(CanUnregister))]
+    private async Task UnregisterAsync(object? parameter)
     {
-        get => _errorMessage;
-        set => SetProperty(ref _errorMessage, value);
-    }
-
-    public ICommand UnregisterCommand => new RelayCommand(UnregisterLicense, CanUnregisterLicense);
-    public ICommand CancelCommand => new RelayCommand(CancelAction);
-
-    public Action? OnUnregisterComplete { get; set; }
-
-    private bool CanUnregisterLicense(object? obj) => ApiKey != null && !IsProcessing;
-
-    private void UnregisterLicense(object? obj)
-    {
-        IsProcessing = true;
+        var window = parameter as Window;
         ErrorMessage = null;
+        IsProcessing = true;
 
         try
         {
-            var pref = new PublisherPreferences(VendorId!, ProductId!, ApiKey!) { PublicKey = PublicKey };
-            var context = new LicHandlingContext(pref);
-            var handler = new LicenseHandlingUninstall(
-                context: context,
-                OnLicenseHandledSuccessfully: (c) =>
-                {
-                    IsProcessing = false;
-                    OnUnregisterComplete?.Invoke();
-                    if (obj is Window window)
-                        window.Close();
-                });
+            var result = await _licenseService.UnregisterAsync(_credentials).ConfigureAwait(true);
+            if (result.Success)
+            {
+                _logger.LogInformation("Unregister succeeded. CorrelationId={CorrelationId}", result.CorrelationId);
+                OnUnregisterComplete?.Invoke(result.Model);
+                window?.Close();
+                return;
+            }
 
-            handler.HandleLicense();
+            ErrorMessage = LicenseErrorPresenter.Describe(result.ErrorKind, result.Exception);
+            if (result.Exception is not null)
+            {
+                await _dialogService.ShowErrorAsync(result.Exception, result.CorrelationId, window).ConfigureAwait(true);
+            }
         }
-        catch (Exception e)
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in UnregisterAsync");
+            ErrorMessage = LicenseErrorPresenter.Describe(LicenseErrorKind.Unknown, ex);
+            await _dialogService.ShowErrorAsync(ex, null, window).ConfigureAwait(true);
+        }
+        finally
         {
             IsProcessing = false;
-            ErrorMessage = e.Message;
-            ShowErrorView(e, obj as Control);
         }
     }
 
-    private void CancelAction(object? obj)
+    private bool CanCancel() => !IsProcessing;
+
+    [RelayCommand(CanExecute = nameof(CanCancel))]
+    private void Cancel(object? parameter)
     {
-        if (obj is Window window)
+        if (parameter is Window window)
             window.Close();
     }
 }
