@@ -9,7 +9,7 @@
     <AssemblyName>LicenseManagement.EndUser.Avalonia</AssemblyName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>LicenseManagement.EndUser.Avalonia</PackageId>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Authors>HYMMA</Authors>
     <Company>HYMMA</Company>
     <Product>LicenseManagement.EndUser.Avalonia</Product>
