@@ -9,7 +9,7 @@
     <AssemblyName>LicenseManagement.EndUser.Avalonia</AssemblyName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>LicenseManagement.EndUser.Avalonia</PackageId>
-    <Version>2.1.0</Version>
+    <Version>2.1.1</Version>
     <Authors>HYMMA</Authors>
     <Company>HYMMA</Company>
     <Product>LicenseManagement.EndUser.Avalonia</Product>
@@ -56,7 +56,7 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.1" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="LicenseManagement.EndUser" Version="3.0.1" />
+    <PackageReference Include="LicenseManagement.EndUser" Version="3.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
