@@ -3,15 +3,20 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:license="clr-namespace:LicenseManagement.EndUser.Avalonia.Views;assembly=LicenseManagement.EndUser.Avalonia"
+        xmlns:local="clr-namespace:AvaloniaSampleApp"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
         x:Class="AvaloniaSampleApp.MainWindow"
+        x:DataType="local:MainWindowViewModel"
         Title="Avalonia License Management Sample"
         MinWidth="400"
         MinHeight="500"
         Width="900"
         Height="700"
-        WindowStartupLocation="CenterScreen"
-        x:Name="ThisWindow">
+        WindowStartupLocation="CenterScreen">
+
+  <Window.Resources>
+    <local:HexStringToBrushConverter x:Key="HexToBrush" />
+  </Window.Resources>
 
   <Window.Styles>
     <Style Selector="Button.feature-btn">
@@ -20,6 +25,7 @@
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Cursor" Value="Hand" />
       <Setter Property="MinWidth" Value="80" />
+      <Setter Property="Foreground" Value="White" />
     </Style>
     <Style Selector="Button.feature-btn:disabled">
       <Setter Property="Opacity" Value="0.5" />
@@ -32,7 +38,6 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <!-- Header - responsive -->
     <Border Grid.Row="0" Background="White" Padding="16,12" BoxShadow="0 1 3 0 #1A000000">
       <WrapPanel Orientation="Horizontal">
         <StackPanel Margin="0,0,24,8" MinWidth="280">
@@ -57,245 +62,158 @@
       </WrapPanel>
     </Border>
 
-    <!-- Main Content - uses UniformGrid-like behavior with scroll -->
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-      <Panel x:Name="ContentPanel" Margin="16">
-        <!-- Wide layout (side by side) -->
-        <Grid x:Name="WideLayout" ColumnDefinitions="*,*" IsVisible="True">
-          <!-- Left Panel: Features Demo -->
+      <Panel Margin="16">
+        <!-- Wide layout: features + license side-by-side -->
+        <Grid ColumnDefinitions="*,*" IsVisible="{Binding !IsNarrow}">
           <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20" Margin="8"
                   BoxShadow="0 1 3 0 #1A000000">
             <StackPanel Spacing="16">
-              <TextBlock Text="Application Features"
-                         FontSize="18"
-                         FontWeight="Bold"
-                         Foreground="#1E293B" />
-
+              <TextBlock Text="Application Features" FontSize="18" FontWeight="Bold" Foreground="#1E293B" />
               <TextBlock Text="These features are enabled/disabled based on your license status:"
-                         TextWrapping="Wrap"
-                         Foreground="#64748B"
-                         FontSize="13" />
+                         TextWrapping="Wrap" Foreground="#64748B" FontSize="13" />
 
-              <!-- Feature 1 -->
               <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Grid.Column="0" Margin="0,0,12,0">
                     <TextBlock Text="Basic Features" FontWeight="SemiBold" Foreground="#1E293B" />
                     <TextBlock Text="Available in trial and paid versions"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
+                               FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                   </StackPanel>
-                  <Button x:Name="BasicFeatureBtn"
-                          Grid.Column="1"
-                          Classes="feature-btn"
-                          Content="Try It"
-                          Background="#10B981"
-                          Foreground="White"
+                  <Button Grid.Column="1" Classes="feature-btn" Content="Try It" Background="#10B981"
                           VerticalAlignment="Center"
+                          IsEnabled="{Binding HasAnyLicense}"
                           Click="BasicFeature_Click" />
                 </Grid>
               </Border>
 
-              <!-- Feature 2 -->
               <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Grid.Column="0" Margin="0,0,12,0">
                     <TextBlock Text="Premium Features" FontWeight="SemiBold" Foreground="#1E293B" />
                     <TextBlock Text="Requires a valid paid license"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
+                               FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                   </StackPanel>
-                  <Button x:Name="PremiumFeatureBtn"
-                          Grid.Column="1"
-                          Classes="feature-btn"
-                          Content="Try It"
-                          Background="#8B5CF6"
-                          Foreground="White"
+                  <Button Grid.Column="1" Classes="feature-btn" Content="Try It" Background="#8B5CF6"
                           VerticalAlignment="Center"
+                          IsEnabled="{Binding HasPaidLicense}"
                           Click="PremiumFeature_Click" />
                 </Grid>
               </Border>
 
-              <!-- Feature 3 -->
               <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Grid.Column="0" Margin="0,0,12,0">
                     <TextBlock Text="Export Data" FontWeight="SemiBold" Foreground="#1E293B" />
                     <TextBlock Text="Export your data to various formats"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
+                               FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                   </StackPanel>
-                  <Button x:Name="ExportFeatureBtn"
-                          Grid.Column="1"
-                          Classes="feature-btn"
-                          Content="Export"
-                          Background="#F59E0B"
-                          Foreground="White"
+                  <Button Grid.Column="1" Classes="feature-btn" Content="Export" Background="#F59E0B"
                           VerticalAlignment="Center"
+                          IsEnabled="{Binding HasPaidLicense}"
                           Click="ExportFeature_Click" />
                 </Grid>
               </Border>
 
-              <!-- Status Message -->
-              <Border x:Name="StatusBorder"
-                      Background="#FEF3C7"
-                      CornerRadius="8"
-                      Padding="12"
-                      IsVisible="False">
-                <TextBlock x:Name="StatusText"
-                           TextWrapping="Wrap"
-                           Foreground="#92400E"
+              <Border CornerRadius="8" Padding="12"
+                      Background="{Binding StatusBackground, Converter={StaticResource HexToBrush}}"
+                      IsVisible="{Binding IsStatusVisible}">
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                           Foreground="{Binding StatusForeground, Converter={StaticResource HexToBrush}}"
                            FontSize="13" />
               </Border>
             </StackPanel>
           </Border>
 
-          <!-- Right Panel: Embedded License Control -->
           <StackPanel Grid.Column="1" Spacing="12" Margin="8">
-            <TextBlock Text="Embedded License Control"
-                       FontSize="16"
-                       FontWeight="SemiBold"
-                       Foreground="#1E293B" />
-
-            <license:LicenseControl x:Name="EmbeddedLicenseControl" />
-
+            <TextBlock Text="Embedded License Control" FontSize="16" FontWeight="SemiBold" Foreground="#1E293B" />
+            <license:LicenseControl x:Name="EmbeddedLicenseControl" License="{Binding License}" />
             <Border Background="White" CornerRadius="12" Padding="16" BoxShadow="0 1 3 0 #1A000000">
               <StackPanel Spacing="12">
                 <TextBlock Text="Quick Actions" FontWeight="SemiBold" Foreground="#1E293B" />
                 <Button Content="Refresh License Status"
-                        Background="#E2E8F0"
-                        Foreground="#475569"
-                        Padding="16,10"
-                        CornerRadius="8"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
+                        Background="#E2E8F0" Foreground="#475569"
+                        Padding="16,10" CornerRadius="8"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         Click="RefreshLicense_Click" />
               </StackPanel>
             </Border>
           </StackPanel>
         </Grid>
 
-        <!-- Narrow layout (stacked) -->
-        <StackPanel x:Name="NarrowLayout" Spacing="16" IsVisible="False">
-          <!-- Features Panel -->
+        <!-- Narrow layout: features then license, stacked. Both bind to the
+             same VM so the wide layout's `EmbeddedLicenseControl` is the
+             single state holder. -->
+        <StackPanel Spacing="16" IsVisible="{Binding IsNarrow}">
           <Border Background="White" CornerRadius="12" Padding="20" Margin="8"
                   BoxShadow="0 1 3 0 #1A000000">
             <StackPanel Spacing="16">
-              <TextBlock Text="Application Features"
-                         FontSize="18"
-                         FontWeight="Bold"
-                         Foreground="#1E293B" />
-
+              <TextBlock Text="Application Features" FontSize="18" FontWeight="Bold" Foreground="#1E293B" />
               <TextBlock Text="These features are enabled/disabled based on your license status:"
-                         TextWrapping="Wrap"
-                         Foreground="#64748B"
-                         FontSize="13" />
+                         TextWrapping="Wrap" Foreground="#64748B" FontSize="13" />
 
-              <!-- Feature 1 -->
               <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Grid.Column="0" Margin="0,0,12,0">
                     <TextBlock Text="Basic Features" FontWeight="SemiBold" Foreground="#1E293B" />
                     <TextBlock Text="Available in trial and paid versions"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
+                               FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                   </StackPanel>
-                  <Button x:Name="BasicFeatureBtnNarrow"
-                          Grid.Column="1"
-                          Classes="feature-btn"
-                          Content="Try It"
-                          Background="#10B981"
-                          Foreground="White"
+                  <Button Grid.Column="1" Classes="feature-btn" Content="Try It" Background="#10B981"
                           VerticalAlignment="Center"
+                          IsEnabled="{Binding HasAnyLicense}"
                           Click="BasicFeature_Click" />
                 </Grid>
               </Border>
 
-              <!-- Feature 2 -->
               <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Grid.Column="0" Margin="0,0,12,0">
                     <TextBlock Text="Premium Features" FontWeight="SemiBold" Foreground="#1E293B" />
                     <TextBlock Text="Requires a valid paid license"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
+                               FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                   </StackPanel>
-                  <Button x:Name="PremiumFeatureBtnNarrow"
-                          Grid.Column="1"
-                          Classes="feature-btn"
-                          Content="Try It"
-                          Background="#8B5CF6"
-                          Foreground="White"
+                  <Button Grid.Column="1" Classes="feature-btn" Content="Try It" Background="#8B5CF6"
                           VerticalAlignment="Center"
+                          IsEnabled="{Binding HasPaidLicense}"
                           Click="PremiumFeature_Click" />
                 </Grid>
               </Border>
 
-              <!-- Feature 3 -->
               <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel Grid.Column="0" Margin="0,0,12,0">
                     <TextBlock Text="Export Data" FontWeight="SemiBold" Foreground="#1E293B" />
                     <TextBlock Text="Export your data to various formats"
-                               FontSize="12"
-                               Foreground="#64748B"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
+                               FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                   </StackPanel>
-                  <Button x:Name="ExportFeatureBtnNarrow"
-                          Grid.Column="1"
-                          Classes="feature-btn"
-                          Content="Export"
-                          Background="#F59E0B"
-                          Foreground="White"
+                  <Button Grid.Column="1" Classes="feature-btn" Content="Export" Background="#F59E0B"
                           VerticalAlignment="Center"
+                          IsEnabled="{Binding HasPaidLicense}"
                           Click="ExportFeature_Click" />
                 </Grid>
               </Border>
 
-              <!-- Status Message -->
-              <Border x:Name="StatusBorderNarrow"
-                      Background="#FEF3C7"
-                      CornerRadius="8"
-                      Padding="12"
-                      IsVisible="False">
-                <TextBlock x:Name="StatusTextNarrow"
-                           TextWrapping="Wrap"
-                           Foreground="#92400E"
+              <Border CornerRadius="8" Padding="12"
+                      Background="{Binding StatusBackground, Converter={StaticResource HexToBrush}}"
+                      IsVisible="{Binding IsStatusVisible}">
+                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                           Foreground="{Binding StatusForeground, Converter={StaticResource HexToBrush}}"
                            FontSize="13" />
               </Border>
             </StackPanel>
           </Border>
 
-          <!-- License Panel -->
           <StackPanel Spacing="12" Margin="8">
-            <TextBlock Text="Embedded License Control"
-                       FontSize="16"
-                       FontWeight="SemiBold"
-                       Foreground="#1E293B" />
-
-            <license:LicenseControl x:Name="EmbeddedLicenseControlNarrow" />
-
+            <TextBlock Text="Embedded License Control" FontSize="16" FontWeight="SemiBold" Foreground="#1E293B" />
+            <license:LicenseControl License="{Binding License}" />
             <Border Background="White" CornerRadius="12" Padding="16" BoxShadow="0 1 3 0 #1A000000">
               <StackPanel Spacing="12">
                 <TextBlock Text="Quick Actions" FontWeight="SemiBold" Foreground="#1E293B" />
                 <Button Content="Refresh License Status"
-                        Background="#E2E8F0"
-                        Foreground="#475569"
-                        Padding="16,10"
-                        CornerRadius="8"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
+                        Background="#E2E8F0" Foreground="#475569"
+                        Padding="16,10" CornerRadius="8"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         Click="RefreshLicense_Click" />
               </StackPanel>
             </Border>

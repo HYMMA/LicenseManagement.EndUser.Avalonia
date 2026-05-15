@@ -13,7 +13,7 @@
     <Authors>HYMMA</Authors>
     <Company>HYMMA</Company>
     <Product>LicenseManagement.EndUser.Avalonia</Product>
-    <Description>Avalonia UI components for license-management.com end-user SDK. Provides ready-to-use Window and UserControl components, view models, and converters for license registration and management workflows. Windows support (cross-platform requires netstandard EndUser package).</Description>
+    <Description>Avalonia UI components for license-management.com end-user SDK. Provides ready-to-use Window and UserControl components, view models, and converters for license registration and management workflows. Windows-only — the underlying LicenseManagement.EndUser SDK ships net481 assemblies that depend on WMI and the Windows Registry.</Description>
     <Copyright>Copyright (c) HYMMA 2024</Copyright>
     <PackageProjectUrl>https://github.com/HYMMA/LicenseManagement.EndUser.Avalonia</PackageProjectUrl>
     <RepositoryUrl>https://github.com/HYMMA/LicenseManagement.EndUser.Avalonia.git</RepositoryUrl>
@@ -45,6 +45,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="LicenseManagement.EndUser" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>

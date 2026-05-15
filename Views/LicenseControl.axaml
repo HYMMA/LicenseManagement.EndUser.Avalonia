@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:LicenseManagement.EndUser.Avalonia.ViewModels"
-             xmlns:converters="clr-namespace:LicenseManagement.EndUser.Avalonia.Converters"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
              x:Class="LicenseManagement.EndUser.Avalonia.Views.LicenseControl"
              x:DataType="vm:LicenseViewModel"
@@ -13,32 +12,21 @@
     <StyleInclude Source="avares://LicenseManagement.EndUser.Avalonia/Themes/LicenseTheme.axaml" />
   </UserControl.Styles>
 
-  <UserControl.Resources>
-    <converters:LicenseStatusToTextConverter x:Key="LicenseStatusToTextConverter" />
-    <converters:LicenseStatusToBackgroundConverter x:Key="LicenseStatusToBackgroundConverter" />
-    <converters:LicenseStatusToBorderConverter x:Key="LicenseStatusToBorderConverter" />
-    <converters:LicenseStatusToIconConverter x:Key="LicenseStatusToIconConverter" />
-    <converters:LicenseStatusToRegisterVisibilityConverter x:Key="LicenseStatusToRegisterVisibilityConverter" />
-    <converters:LicenseStatusToUnregisterVisibilityConverter x:Key="LicenseStatusToUnregisterVisibilityConverter" />
-    <converters:LicenseStatusToRenewVisibilityConverter x:Key="LicenseStatusToRenewVisibilityConverter" />
-    <converters:LicenseStatusToSubscriptionVisibilityConverter x:Key="LicenseStatusToSubscriptionVisibilityConverter" />
-    <converters:LicenseStatusToTrialVisibilityConverter x:Key="LicenseStatusToTrialVisibilityConverter" />
-    <converters:NullableDateTimeToStringConverter x:Key="NullableDateTimeToStringConverter" />
-  </UserControl.Resources>
-
-  <Border Classes="card" Background="#FFFFFF">
+  <Border Classes="card" Background="{StaticResource CardBackgroundBrush}">
     <StackPanel Spacing="16">
-      <!-- Header with Status Badge - responsive -->
-      <WrapPanel Orientation="Horizontal">
-        <!-- License Icon -->
-        <Border Background="#F0F9FF"
+      <!-- Header with Status Badge -->
+      <DockPanel LastChildFill="True">
+        <Border Background="{StaticResource IconBlueBackgroundBrush}"
                 CornerRadius="10"
                 Padding="12"
-                Margin="0,0,16,8">
-          <TextBlock Text="📄" FontSize="24" />
+                Margin="0,0,16,8"
+                DockPanel.Dock="Left"
+                VerticalAlignment="Top">
+          <PathIcon Width="22" Height="22"
+                    Foreground="{StaticResource PrimaryBrush}"
+                    Data="{StaticResource LicenseDocumentIcon}" />
         </Border>
 
-        <!-- Title and Status -->
         <StackPanel VerticalAlignment="Center" Margin="0,0,0,8">
           <TextBlock Text="License Status" Classes="heading" FontSize="16" />
           <Border Classes="status-badge"
@@ -61,14 +49,13 @@
             </StackPanel>
           </Border>
         </StackPanel>
-      </WrapPanel>
+      </DockPanel>
 
       <!-- Separator -->
-      <Border Height="1" Background="#E2E8F0" />
+      <Border Height="1" Background="{StaticResource BorderBrush}" />
 
-      <!-- License Details - stacked for responsiveness -->
+      <!-- License Details -->
       <StackPanel Spacing="10">
-        <!-- Subscription Info (only when not trial) -->
         <StackPanel IsVisible="{Binding Status, Converter={StaticResource LicenseStatusToSubscriptionVisibilityConverter}}"
                     Spacing="10">
           <WrapPanel Orientation="Horizontal">
@@ -82,7 +69,6 @@
           </WrapPanel>
         </StackPanel>
 
-        <!-- Trial Info (only when trial) -->
         <WrapPanel Orientation="Horizontal"
                    IsVisible="{Binding Status, Converter={StaticResource LicenseStatusToTrialVisibilityConverter}}">
           <TextBlock Text="Trial Expires: " Classes="label" VerticalAlignment="Center" />
@@ -90,20 +76,17 @@
                      Classes="value" />
         </WrapPanel>
 
-        <!-- License File Expiry -->
         <WrapPanel Orientation="Horizontal">
           <TextBlock Text="License File Expires: " Classes="label" VerticalAlignment="Center" />
           <TextBlock Text="{Binding Expires, Converter={StaticResource NullableDateTimeToStringConverter}}"
                      Classes="value" />
         </WrapPanel>
 
-        <!-- Computer Name -->
         <WrapPanel Orientation="Horizontal">
           <TextBlock Text="Computer: " Classes="label" VerticalAlignment="Center" />
           <TextBlock Text="{Binding ComputerName}" Classes="value" TextWrapping="Wrap" />
         </WrapPanel>
 
-        <!-- Product Selection -->
         <WrapPanel Orientation="Horizontal">
           <TextBlock Text="Product: " Classes="label" VerticalAlignment="Center" Margin="0,0,8,0" />
           <ComboBox Classes="modern"
@@ -112,25 +95,22 @@
                     MinWidth="140">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="vm:ProductViewModel">
-                <TextBlock Text="{Binding Name}" Padding="4" />
+                <TextBlock Text="{Binding Name}" Padding="8,4" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
         </WrapPanel>
 
-        <!-- Vendor Info -->
         <WrapPanel Orientation="Horizontal">
           <TextBlock Text="Vendor: " Classes="label" VerticalAlignment="Center" />
           <TextBlock Text="{Binding VendorName}" Classes="value" />
         </WrapPanel>
       </StackPanel>
 
-      <!-- Separator -->
-      <Border Height="1" Background="#E2E8F0" />
+      <Border Height="1" Background="{StaticResource BorderBrush}" />
 
-      <!-- Action Buttons - wrap on small screens -->
+      <!-- Action Buttons -->
       <WrapPanel Orientation="Horizontal" HorizontalAlignment="Right">
-        <!-- Register Button (visible when not valid/expired) -->
         <Button Content="Register License"
                 Classes="primary"
                 Margin="0,4,8,4"
@@ -138,7 +118,6 @@
                 CommandParameter="{Binding #ThisControl}"
                 IsVisible="{Binding Status, Converter={StaticResource LicenseStatusToRegisterVisibilityConverter}}" />
 
-        <!-- Unregister Button (visible when valid) -->
         <Button Content="Release License"
                 Classes="secondary"
                 Margin="0,4,8,4"
@@ -146,7 +125,6 @@
                 CommandParameter="{Binding #ThisControl}"
                 IsVisible="{Binding Status, Converter={StaticResource LicenseStatusToUnregisterVisibilityConverter}}" />
 
-        <!-- Renew Button (visible when expired) -->
         <Button Content="Download New File"
                 Classes="primary"
                 Margin="0,4,0,4"
@@ -155,7 +133,6 @@
                 IsVisible="{Binding Status, Converter={StaticResource LicenseStatusToRenewVisibilityConverter}}" />
       </WrapPanel>
 
-      <!-- Footer -->
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
         <TextBlock Text="Powered by " Classes="muted" />
         <TextBlock Text="License-Management.com" Classes="muted" FontWeight="Medium" />

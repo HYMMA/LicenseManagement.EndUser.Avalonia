@@ -1,114 +1,54 @@
 using System;
 using System.Globalization;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using LicenseManagement.EndUser.Avalonia.Services;
 using LicenseManagement.EndUser.License;
 
 namespace LicenseManagement.EndUser.Avalonia.Converters;
 
-public class LicenseStatusToTextConverter : IValueConverter
+/// <summary>
+/// Base class for one-way <see cref="LicenseStatusTitles"/> converters.
+/// Subclasses pick a single facet from <see cref="LicenseStatusPresenter"/>.
+/// </summary>
+public abstract class LicenseStatusConverterBase : IValueConverter
 {
-    private const string ComputerUnregistered = "Computer has been unregistered.";
-    private const string ReceiptExpired = "Payment is suspended or subscription needs renewal.";
-    private const string InvalidTrial = "Trial ended and requires activation.";
-    private const string ActiveTrial = "Trial and active.";
-    private const string ActivePaid = "Paid and active.";
-    private const string Expired = "License file expired.";
-
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not LicenseStatusTitles status)
-            return "Unknown";
+            return DefaultValue;
 
-        return status switch
-        {
-            LicenseStatusTitles.Expired => Expired,
-            LicenseStatusTitles.Valid => ActivePaid,
-            LicenseStatusTitles.ValidTrial => ActiveTrial,
-            LicenseStatusTitles.InvalidTrial => InvalidTrial,
-            LicenseStatusTitles.ReceiptExpired => ReceiptExpired,
-            LicenseStatusTitles.ReceiptUnregistered => ComputerUnregistered,
-            _ => "Unknown"
-        };
+        return Select(LicenseStatusPresenter.For(status));
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        BindingOperations.DoNothing;
+
+    protected abstract object DefaultValue { get; }
+    protected abstract object Select(LicenseStatusPresentation presentation);
 }
 
-public class LicenseStatusToBackgroundConverter : IValueConverter
+public sealed class LicenseStatusToTextConverter : LicenseStatusConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return Brushes.Transparent;
-
-        return status switch
-        {
-            LicenseStatusTitles.Expired => new SolidColorBrush(Color.Parse("#FFF0F0")),
-            LicenseStatusTitles.Valid => new SolidColorBrush(Color.Parse("#F0FFF4")),
-            LicenseStatusTitles.ValidTrial => new SolidColorBrush(Color.Parse("#F0F9FF")),
-            LicenseStatusTitles.InvalidTrial => new SolidColorBrush(Color.Parse("#FFF0F0")),
-            LicenseStatusTitles.ReceiptExpired => new SolidColorBrush(Color.Parse("#FFF8E1")),
-            LicenseStatusTitles.ReceiptUnregistered => new SolidColorBrush(Color.Parse("#F5F5F5")),
-            _ => Brushes.Transparent
-        };
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    protected override object DefaultValue => "Unknown";
+    protected override object Select(LicenseStatusPresentation p) => p.Text;
 }
 
-public class LicenseStatusToBorderConverter : IValueConverter
+public sealed class LicenseStatusToBackgroundConverter : LicenseStatusConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return Brushes.Gray;
-
-        return status switch
-        {
-            LicenseStatusTitles.Expired => new SolidColorBrush(Color.Parse("#DC2626")),
-            LicenseStatusTitles.Valid => new SolidColorBrush(Color.Parse("#16A34A")),
-            LicenseStatusTitles.ValidTrial => new SolidColorBrush(Color.Parse("#2563EB")),
-            LicenseStatusTitles.InvalidTrial => new SolidColorBrush(Color.Parse("#DC2626")),
-            LicenseStatusTitles.ReceiptExpired => new SolidColorBrush(Color.Parse("#D97706")),
-            LicenseStatusTitles.ReceiptUnregistered => new SolidColorBrush(Color.Parse("#6B7280")),
-            _ => Brushes.Gray
-        };
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+    protected override object DefaultValue => Brushes.Transparent;
+    protected override object Select(LicenseStatusPresentation p) => p.Background;
 }
 
-public class LicenseStatusToIconConverter : IValueConverter
+public sealed class LicenseStatusToBorderConverter : LicenseStatusConverterBase
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not LicenseStatusTitles status)
-            return "?";
+    protected override object DefaultValue => Brushes.Gray;
+    protected override object Select(LicenseStatusPresentation p) => p.Foreground;
+}
 
-        return status switch
-        {
-            LicenseStatusTitles.Expired => "!",
-            LicenseStatusTitles.Valid => "✓",
-            LicenseStatusTitles.ValidTrial => "◷",
-            LicenseStatusTitles.InvalidTrial => "!",
-            LicenseStatusTitles.ReceiptExpired => "!",
-            LicenseStatusTitles.ReceiptUnregistered => "○",
-            _ => "?"
-        };
-    }
-
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        throw new NotImplementedException();
-    }
+public sealed class LicenseStatusToIconConverter : LicenseStatusConverterBase
+{
+    protected override object DefaultValue => "?";
+    protected override object Select(LicenseStatusPresentation p) => p.Icon;
 }

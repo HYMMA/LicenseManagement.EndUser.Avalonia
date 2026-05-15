@@ -14,10 +14,12 @@ Avalonia UI components for [license-management.com](https://license-management.c
 
 ## Features
 
-- **Cross-platform**: Works on Windows, macOS, and Linux
-- **Modern UI**: Clean, modern design with Fluent theme
+- **Windows desktop**: Built on Avalonia 11 and the `LicenseManagement.EndUser` SDK, which depends on WMI and the Windows Registry. macOS / Linux is not currently supported.
+- **Modern UI**: Clean, modern design with Fluent theme and vector iconography
 - **Embeddable**: Use `LicenseControl` UserControl in your existing app
 - **Standalone**: Use `LicenseWindow` for a complete license management window
+- **Async by default**: Non-blocking calls keep the UI responsive even on slow networks
+- **Differentiated error handling**: Maps SDK exceptions (`ComputerOfflineException`, `LicenseExpiredException`, `ReceiptExpiredException`, `ApiException`, …) into user-friendly messages with a correlation id for support
 - **Full functionality**: Register, unregister, and renew licenses
 
 ## Installation
@@ -28,23 +30,27 @@ dotnet add package LicenseManagement.EndUser.Avalonia
 
 ## Quick Start
 
+> [!WARNING]
+> Do not hardcode API keys in source. Load them from configuration files, environment variables, or platform-secure storage (Windows Credential Manager / DPAPI). The samples below use placeholders only.
+
 ### Option 1: Standalone Window
 
 Show a license management window from anywhere in your app:
 
 ```csharp
+using LicenseManagement.EndUser.Avalonia.Services;
 using LicenseManagement.EndUser.Avalonia.Views;
 
-// Create and show the license window
-var licenseWindow = LicenseWindow.Create(
+var credentials = new LicenseCredentials(
     vendorId: "VND_01ABCDEF...",
     productId: "PRD_01ABCDEF...",
-    apiKey: "your-api-key",
+    apiKey: configuration["License:ApiKey"]!,
     publicKey: "<RSAKeyValue>...</RSAKeyValue>",
-    validDays: 30
-);
+    validDays: 30);
 
+var (licenseWindow, initialization) = LicenseWindow.Create(credentials);
 await licenseWindow.ShowDialog(parentWindow);
+await initialization; // optional: await the first validation
 ```
 
 ### Option 2: Embeddable Control
@@ -60,7 +66,7 @@ Add the license control directly to your AXAML:
 </Window>
 ```
 
-Initialize in code-behind:
+Initialize asynchronously in code-behind:
 
 ```csharp
 public partial class MainWindow : Window
@@ -68,14 +74,19 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        _ = InitializeLicenseAsync();
+    }
 
-        LicenseControl.Initialize(
+    private async Task InitializeLicenseAsync()
+    {
+        var credentials = new LicenseCredentials(
             vendorId: "VND_01ABCDEF...",
             productId: "PRD_01ABCDEF...",
-            apiKey: "your-api-key",
+            apiKey: configuration["License:ApiKey"]!,
             publicKey: "<RSAKeyValue>...</RSAKeyValue>",
-            validDays: 30
-        );
+            validDays: 30);
+
+        await LicenseControl.InitializeAsync(credentials);
     }
 }
 ```
