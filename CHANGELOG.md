@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] - 2026-06-25
+
+### Changed
+- Bumped `LicenseManagement.EndUser` dependency from 3.0.2 to 3.1.1, realigning it with the
+  core SDK's current release (the WPF package already consumes 3.1.1). Picks up the net8
+  DNS-staleness and HTTPS-guard fixes from EndUser 3.1.x. No API or UI change.
+
 ## [2.1.1] - 2026-05-15
 
 ### Changed
