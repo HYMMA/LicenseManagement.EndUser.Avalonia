@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using LicenseManagement.EndUser;
 
 namespace LicenseManagement.EndUser.Avalonia.Services;
 
@@ -38,5 +39,16 @@ public interface ILicenseService
     /// </summary>
     Task<LicenseOperationResult> UnregisterAsync(
         LicenseCredentials credentials,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Fetch the compact (JWS) signed license — <c>eddsa</c> / <c>es256</c> / <c>jws</c>
+    /// — for an already-registered, valid license. This is the token an embedded /
+    /// native consumer verifies offline; it does not touch the XML activation flow.
+    /// Run <see cref="RegisterAsync"/> / <see cref="LaunchAsync"/> first.
+    /// </summary>
+    Task<CompactLicenseResult> GetCompactLicenseAsync(
+        LicenseCredentials credentials,
+        LicenseFormat format,
         CancellationToken cancellationToken = default);
 }

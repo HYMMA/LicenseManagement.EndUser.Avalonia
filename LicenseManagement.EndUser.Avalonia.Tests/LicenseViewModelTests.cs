@@ -100,6 +100,9 @@ public class LicenseViewModelTests
 
         public Task<LicenseOperationResult> UnregisterAsync(LicenseCredentials c, CancellationToken ct = default)
             => Task.FromResult(LicenseOperationResult.Ok(null, "stub"));
+
+        public Task<CompactLicenseResult> GetCompactLicenseAsync(LicenseCredentials c, global::LicenseManagement.EndUser.LicenseFormat format, CancellationToken ct = default)
+            => Task.FromResult(CompactLicenseResult.Ok("stub.jws.token", "stub"));
     }
 
     private sealed class StubDialogService : IDialogService

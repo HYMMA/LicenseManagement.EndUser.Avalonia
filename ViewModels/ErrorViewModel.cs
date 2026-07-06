@@ -46,7 +46,15 @@ public sealed partial class ErrorViewModel : ObservableObject
                 is global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                     ? desktop.MainWindow?.Clipboard
                     : null;
-            clipboard?.SetTextAsync(CorrelationId);
+            if (clipboard != null)
+            {
+                // Avalonia churned the clipboard API between 11 and 12 (SetTextAsync
+                // removed, DataObject -> DataTransfer). Bind late so this compiles and
+                // works on whichever Avalonia the consumer ships.
+                var setText = clipboard.GetType().GetMethod("SetTextAsync", new[] { typeof(string) });
+                if (setText != null)
+                    _ = setText.Invoke(clipboard, new object[] { CorrelationId });
+            }
         }
         catch (Exception ex)
         {

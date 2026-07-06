@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using LicenseManagement.EndUser;
 using LicenseManagement.EndUser.Exceptions;
 using LicenseManagement.EndUser.Models;
 using Microsoft.Extensions.Logging;
@@ -92,6 +93,56 @@ public sealed class LicenseService : ILicenseService
                 return handler.HandleLicenseAsync();
             },
             cancellationToken);
+    }
+
+    public async Task<CompactLicenseResult> GetCompactLicenseAsync(
+        LicenseCredentials credentials,
+        LicenseFormat format,
+        CancellationToken cancellationToken = default)
+    {
+        var correlationId = Guid.NewGuid().ToString("n");
+        var preferences = new PublisherPreferences(credentials.VendorId, credentials.ProductId, credentials.ApiKey)
+        {
+            PublicKey = credentials.PublicKey,
+            ValidDays = credentials.ValidDays
+        };
+        var context = new LicHandlingContext(preferences);
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Load the current (valid) license so we have the server computer + product ids.
+            await new LicenseHandlingLaunch(context).HandleLicenseAsync().ConfigureAwait(false);
+
+            var model = context.LicenseModel;
+            if (model?.Computer?.Id == null || model.Product?.Id == null)
+            {
+                return CompactLicenseResult.Fail(
+                    LicenseErrorKind.Unknown,
+                    new InvalidOperationException("No active license — register the app first."),
+                    correlationId);
+            }
+
+            string token = await CompactLicense
+                .FetchAsync(credentials.ApiKey, model.Computer.Id, model.Product.Id, format, credentials.ValidDays, cancellationToken)
+                .ConfigureAwait(false);
+
+            _logger.LogInformation(
+                "Compact license fetched ({Format}). CorrelationId={CorrelationId}", format, correlationId);
+            return CompactLicenseResult.Ok(token, correlationId);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            var kind = Classify(ex);
+            _logger.LogWarning(ex,
+                "Compact license fetch failed with {ErrorKind}. CorrelationId={CorrelationId}", kind, correlationId);
+            return CompactLicenseResult.Fail(kind, ex, correlationId);
+        }
     }
 
     private async Task<LicenseOperationResult> ExecuteAsync(
