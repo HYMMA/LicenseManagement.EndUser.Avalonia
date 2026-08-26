@@ -22,6 +22,10 @@ jobs:
       shell: bash
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
+    - name: Ensure the local feed folder exists (nuget.config lists ..\local-nuget)
+      run: mkdir -p ../local-nuget
+      shell: bash
+
     - name: Restore dependencies
       run: dotnet restore
 

@@ -18,6 +18,10 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Ensure the local feed folder exists (nuget.config lists ..\local-nuget)
+      run: mkdir -p ../local-nuget
+      shell: bash
+
     - name: Restore dependencies
       run: dotnet restore
 
