@@ -87,6 +87,23 @@
           <TextBlock Text="{Binding ComputerName}" Classes="value" TextWrapping="Wrap" />
         </WrapPanel>
 
+        <!-- the id the license portal accepts to activate exactly this computer -->
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="Device ID " Classes="label" VerticalAlignment="Center" />
+          <TextBlock Text="{Binding DeviceId}"
+                     FontFamily="Consolas, monospace"
+                     FontSize="12"
+                     VerticalAlignment="Center"
+                     MaxWidth="230"
+                     TextTrimming="CharacterEllipsis"
+                     ToolTip.Tip="{Binding DeviceId}" />
+          <Button Content="Copy"
+                  Classes="link"
+                  Margin="6,0,0,0"
+                  Click="CopyDeviceIdButton_Click"
+                  ToolTip.Tip="Copy the device ID, e.g. to activate this computer in the license portal" />
+        </StackPanel>
+
         <WrapPanel Orientation="Horizontal">
           <TextBlock Text="Product: " Classes="label" VerticalAlignment="Center" Margin="0,0,8,0" />
           <ComboBox Classes="modern"
@@ -131,12 +148,28 @@
                 Command="{Binding RenewLicenseFileCommand}"
                 CommandParameter="{Binding #ThisControl}"
                 IsVisible="{Binding Status, Converter={StaticResource LicenseStatusToRenewVisibilityConverter}}" />
+
+        <!-- a license file from the portal or an email, for a computer that can't connect -->
+        <Button Content="Install file…"
+                Classes="link"
+                Margin="8,4,0,4"
+                Command="{Binding InstallLicenseFileCommand}"
+                CommandParameter="{Binding #ThisControl}"
+                ToolTip.Tip="Install a license file you downloaded or were emailed" />
       </WrapPanel>
 
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-        <TextBlock Text="Powered by " Classes="muted" />
-        <TextBlock Text="License-Management.com" Classes="muted" FontWeight="Medium" />
-      </StackPanel>
+      <Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="Powered by " Classes="muted" />
+          <TextBlock Text="License-Management.com" Classes="muted" FontWeight="Medium" />
+        </StackPanel>
+        <Button Content="Manage licenses online"
+                Classes="link"
+                HorizontalAlignment="Right"
+                Command="{Binding OpenPortalCommand}"
+                IsVisible="{Binding HasPortal}"
+                ToolTip.Tip="{Binding PortalUrl}" />
+      </Grid>
     </StackPanel>
   </Border>
 </UserControl>

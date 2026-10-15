@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using LicenseManagement.EndUser.Avalonia.ViewModels;
 
 namespace LicenseManagement.EndUser.Avalonia.Services;
 
@@ -17,4 +18,17 @@ public interface IDialogService
     /// window so the dialog appears modal.
     /// </summary>
     Task ShowErrorAsync(Exception exception, string? correlationId, Control? ownerControl);
+
+    /// <summary>
+    /// Show an error the caller has already built, including any recovery
+    /// actions (install a license file, open the license portal). The default
+    /// implementation keeps existing custom services working: it falls back to
+    /// <see cref="ShowErrorAsync(Exception, string?, Control?)"/> and drops the
+    /// recovery actions.
+    /// </summary>
+    Task ShowErrorAsync(ErrorViewModel error, Control? ownerControl)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return ShowErrorAsync(error.Error ?? new InvalidOperationException(error.Message), error.CorrelationId, ownerControl);
+    }
 }

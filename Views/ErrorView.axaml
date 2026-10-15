@@ -20,7 +20,7 @@
   </Window.Styles>
 
   <Border Classes="card" Margin="0" CornerRadius="0" BorderThickness="0">
-    <Grid RowDefinitions="Auto,*,Auto,Auto">
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
       <!-- Header -->
       <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
         <Border Background="{StaticResource IconRedBackgroundBrush}" CornerRadius="8" Padding="10">
@@ -65,8 +65,26 @@
         </Grid>
       </Border>
 
+      <!-- the way out when the server can't be reached -->
+      <StackPanel Grid.Row="3" Margin="0,0,0,16" IsVisible="{Binding HasRecovery}">
+        <TextBlock Text="You can still activate this computer without connecting:"
+                   Classes="label"
+                   TextWrapping="Wrap" />
+        <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+          <Button Content="Open license portal"
+                  Classes="secondary"
+                  Margin="0,0,8,0"
+                  Click="OpenPortalButton_Click"
+                  IsVisible="{Binding CanOpenPortal}" />
+          <Button Content="Install license file…"
+                  Classes="secondary"
+                  Click="InstallFileButton_Click"
+                  IsVisible="{Binding CanInstallLicenseFile}" />
+        </WrapPanel>
+      </StackPanel>
+
       <!-- Close Button -->
-      <Button Grid.Row="3"
+      <Button Grid.Row="4"
               Content="OK"
               Classes="primary"
               HorizontalAlignment="Right"

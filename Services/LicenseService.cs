@@ -203,6 +203,7 @@ public sealed class LicenseService : ILicenseService
         return ex switch
         {
             ComputerOfflineException => LicenseErrorKind.ComputerOffline,
+            NetworkUnavailableException => LicenseErrorKind.NetworkUnavailable,
             CouldNotReadLicenseFromDiskException => LicenseErrorKind.CouldNotReadLicense,
             ApiException => LicenseErrorKind.ApiError,
             _ => ex.GetType().Name switch

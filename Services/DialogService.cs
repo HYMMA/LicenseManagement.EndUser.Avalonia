@@ -23,16 +23,24 @@ public sealed class DialogService : IDialogService
         _logger = logger ?? NullLogger<DialogService>.Instance;
     }
 
-    public async Task ShowErrorAsync(Exception exception, string? correlationId, Control? ownerControl)
+    public Task ShowErrorAsync(Exception exception, string? correlationId, Control? ownerControl)
     {
         ArgumentNullException.ThrowIfNull(exception);
+        return ShowErrorAsync(new ErrorViewModel(exception, correlationId), ownerControl);
+    }
 
-        _logger.LogError(exception, "License error surfaced to user. CorrelationId={CorrelationId}", correlationId ?? "n/a");
+    public async Task ShowErrorAsync(ErrorViewModel error, Control? ownerControl)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+
+        if (error.Error is not null)
+            _logger.LogError(error.Error, "License error surfaced to user. CorrelationId={CorrelationId}", error.CorrelationId ?? "n/a");
+        else
+            _logger.LogError("License error surfaced to user: {Message}. CorrelationId={CorrelationId}", error.Message, error.CorrelationId ?? "n/a");
 
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            var viewModel = new ErrorViewModel(exception, correlationId);
-            var errorView = new ErrorView { DataContext = viewModel };
+            var errorView = new ErrorView { DataContext = error };
 
             var parent = ownerControl is null ? null : TopLevel.GetTopLevel(ownerControl) as Window;
             if (parent is not null)

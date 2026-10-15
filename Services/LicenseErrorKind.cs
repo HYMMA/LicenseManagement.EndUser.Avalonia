@@ -13,6 +13,13 @@ public enum LicenseErrorKind
     /// <summary>The machine could not reach the license service.</summary>
     ComputerOffline,
 
+    /// <summary>
+    /// The license server could not be reached for a reason the SDK could
+    /// name (DNS, TLS, proxy, timeout). The SDK's message is written for the
+    /// end user and says what failed.
+    /// </summary>
+    NetworkUnavailable,
+
     /// <summary>The local license file has expired.</summary>
     LicenseExpired,
 

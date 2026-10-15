@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using LicenseManagement.EndUser.Avalonia.Services;
 using LicenseManagement.EndUser.Avalonia.ViewModels;
@@ -16,6 +18,13 @@ public partial class LicenseControl : UserControl
     public static readonly StyledProperty<LicenseViewModel?> LicenseProperty =
         AvaloniaProperty.Register<LicenseControl, LicenseViewModel?>(nameof(License));
 
+    /// <summary>
+    /// The vendor's license portal, offered when the license server can't be reached.
+    /// Optional; copied onto <see cref="LicenseViewModel.PortalUrl"/>.
+    /// </summary>
+    public static readonly StyledProperty<string?> PortalUrlProperty =
+        AvaloniaProperty.Register<LicenseControl, string?>(nameof(PortalUrl));
+
     private ILicenseService _licenseService = new LicenseService();
     private IDialogService _dialogService = new DialogService();
     private ILogger<LicenseControl> _logger = NullLogger<LicenseControl>.Instance;
@@ -23,7 +32,15 @@ public partial class LicenseControl : UserControl
     static LicenseControl()
     {
         LicenseProperty.Changed.AddClassHandler<LicenseControl, LicenseViewModel?>((control, args) =>
-            control.DataContext = args.NewValue.Value);
+        {
+            control.DataContext = args.NewValue.Value;
+            if (args.NewValue.Value is { } license && control.PortalUrl is not null)
+                license.PortalUrl = control.PortalUrl;
+        });
+        PortalUrlProperty.Changed.AddClassHandler<LicenseControl, string?>((control, args) =>
+        {
+            if (control.License is not null) control.License.PortalUrl = args.NewValue.Value;
+        });
     }
 
     public LicenseControl()
@@ -35,6 +52,12 @@ public partial class LicenseControl : UserControl
     {
         get => GetValue(LicenseProperty);
         set => SetValue(LicenseProperty, value);
+    }
+
+    public string? PortalUrl
+    {
+        get => GetValue(PortalUrlProperty);
+        set => SetValue(PortalUrlProperty, value);
     }
 
     /// <summary>
@@ -66,6 +89,7 @@ public partial class LicenseControl : UserControl
         var products_ = products ?? new ObservableCollection<ProductViewModel>();
         var viewModel = new LicenseViewModel(_licenseService, _dialogService);
         viewModel.Configure(credentials, products_);
+        viewModel.PortalUrl = PortalUrl;
         SetLicenseOnUiThread(viewModel);
 
         var result = await _licenseService.LaunchAsync(credentials).ConfigureAwait(true);
@@ -75,7 +99,7 @@ public partial class LicenseControl : UserControl
         if (!result.Success && result.Exception is not null)
         {
             _logger.LogWarning(result.Exception, "Initial license launch failed. CorrelationId={CorrelationId}", result.CorrelationId);
-            await _dialogService.ShowErrorAsync(result.Exception, result.CorrelationId, this).ConfigureAwait(true);
+            await viewModel.ShowErrorAsync(result.Exception, result.CorrelationId, this).ConfigureAwait(true);
         }
     }
 
@@ -93,6 +117,22 @@ public partial class LicenseControl : UserControl
     {
         var creds = new LicenseCredentials(vendorId, productId, apiKey, publicKey, validDays);
         return InitializeAsync(creds, products);
+    }
+
+    private async void CopyDeviceIdButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var id = License?.DeviceId;
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (string.IsNullOrEmpty(id) || clipboard is null) return;
+        try
+        {
+            await clipboard.SetTextAsync(id).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            // the clipboard is briefly locked by another app; the id is still in the tooltip
+            _logger.LogDebug(ex, "Could not copy the device id");
+        }
     }
 
     private void SetLicenseOnUiThread(LicenseViewModel viewModel)

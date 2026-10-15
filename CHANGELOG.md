@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-10-15
+
+### Added
+- **Activate a computer that can't reach the license server.** When a check, download
+  or the initial launch fails because the server is unreachable, the error dialog now
+  offers **Install license file…** (pick a `.lic` downloaded from the portal or received
+  by email; `LicenseFileImporter` verifies it for this product and computer before it
+  replaces anything) and, when a portal URL is set, **Open license portal**. The license
+  control also has an **Install file…** link next to its actions.
+- **Device ID** with a **Copy** link in the license control. The license portal accepts
+  it to activate exactly this computer.
+- `LicenseControl.PortalUrl` / `LicenseWindow.PortalUrl` / `LicenseViewModel.PortalUrl`;
+  when set, the footer links to the vendor's license portal (**Manage licenses online**).
+- `LicenseViewModel.CreateErrorViewModel(...)`, `ShowErrorAsync(...)`,
+  `ImportLicenseFileAsync(path, control)`, `InstallLicenseFileCommand`, `OpenPortalCommand`,
+  `DeviceId` and `LicenseFolder`; `ErrorViewModel.Error`, `InstallLicenseFile`,
+  `OpenPortal` and `HasRecovery`.
+- `IDialogService.ShowErrorAsync(ErrorViewModel, Control?)` so the dialog receives the
+  recovery actions. It has a default implementation, so existing custom dialog services
+  keep compiling and fall back to the exception-only overload (without the buttons).
+- `LicenseErrorKind.NetworkUnavailable`.
+
+### Changed
+- Requires `LicenseManagement.EndUser` 3.5.0. Network failures now say what failed
+  (e.g. "This computer's network could not find license-management.com … ask your IT
+  team to allow it") instead of the generic "unexpected error" text: the SDK's
+  `NetworkUnavailableException` message is written for end users and is shown as is.
+
 ## [3.1.0] - 2026-08-26
 
 ### Changed

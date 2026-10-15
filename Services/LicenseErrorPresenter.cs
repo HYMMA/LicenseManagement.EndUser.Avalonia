@@ -14,6 +14,11 @@ public static class LicenseErrorPresenter
     {
         LicenseErrorKind.ComputerOffline =>
             "We could not reach the license service. Please check your internet connection and try again.",
+        // the SDK already says what failed (e.g. a DNS filter) and how to get round it
+        LicenseErrorKind.NetworkUnavailable when !string.IsNullOrWhiteSpace(exception?.Message) =>
+            exception!.Message,
+        LicenseErrorKind.NetworkUnavailable =>
+            "We could not reach the license service. Check the internet connection and firewall, or install the license file by hand.",
         LicenseErrorKind.LicenseExpired =>
             "Your license file has expired. Use \"Download New File\" to refresh it.",
         LicenseErrorKind.ReceiptExpired =>

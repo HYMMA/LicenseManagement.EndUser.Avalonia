@@ -19,6 +19,13 @@ public partial class LicenseWindow : Window
         set => LicenseControlElement.License = value;
     }
 
+    /// <summary>The vendor's license portal, offered when the license server can't be reached.</summary>
+    public string? PortalUrl
+    {
+        get => LicenseControlElement.PortalUrl;
+        set => LicenseControlElement.PortalUrl = value;
+    }
+
     public Task InitializeAsync(
         LicenseCredentials credentials,
         ObservableCollection<ProductViewModel>? products = null) =>

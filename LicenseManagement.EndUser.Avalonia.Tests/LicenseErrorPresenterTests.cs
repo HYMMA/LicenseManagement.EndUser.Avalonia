@@ -7,6 +7,7 @@ public class LicenseErrorPresenterTests
 {
     [Theory]
     [InlineData(LicenseErrorKind.ComputerOffline)]
+    [InlineData(LicenseErrorKind.NetworkUnavailable)]
     [InlineData(LicenseErrorKind.LicenseExpired)]
     [InlineData(LicenseErrorKind.ReceiptExpired)]
     [InlineData(LicenseErrorKind.CouldNotReadLicense)]
